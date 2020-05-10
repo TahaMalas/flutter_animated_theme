@@ -1,5 +1,13 @@
 # flutter_animated_theme
 
+
+
+<p align="center">
+  <img src="https://i.ibb.co/pLDxh3X/animated-theme-feature.png" />
+</p>
+
+
+
 Customize animation on theme changing in Flutter, the idea was inspired by the Telegram theme changing animation, I researched for it and did not find anything similar in Flutter, so that how this package spotted the light
 
 ## Getting Started
@@ -16,7 +24,7 @@ dependencies:
 
 Trust me the animation is smoother than it's looking, they are laggy in the demonstration below because it's a GIF.
 
-AnimationType | FADE_ANIMATED_THEME(default) | SCALE_ANIMATED_THEME | CIRCULAR_ANIMATED_THEME
+AnimationType | Fade animation(default) | Scale animation | Circular animation
 --- | --- | --- | ---
 Result | ![](https://media.giphy.com/media/QZDvnOBXsn1qVE8H4B/source.gif) | ![](https://media.giphy.com/media/Z9EMsThcQfIQMllXtO/source.gif) | ![](https://media.giphy.com/media/JUjhwnGGU81S2c8vO9/source.gif)
 
