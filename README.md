@@ -16,7 +16,7 @@ Customize animation on theme changing in Flutter, the idea was inspired by the T
 
 ```yaml
 dependencies:
-  flutter_animated_theme: ^0.5.0
+  flutter_animated_theme: ^0.5.0+1
 ```
 
 ## Available animations
@@ -113,6 +113,16 @@ enum AnimationType {
 Also change the animation duration to fit your needs.
 
 
+## Current issues
+There is an issue that is currently appearing in the console while animating between two themes with circular animation, it does not affect the animation process.
+
+## How it was implemented
+You can check the full article that describes how this package was implemented on your prefered platform.
+
+<a href="https://www.linkedin.com/pulse/animate-theme-change-flutter-circular-scale-animations-taha-malas/?published=t&trackingId=n1AkvjY%2FTWygNlUbKqCLBA%3D%3D"  target="_blank">LinkedIn</a>
+
+
+<a href="https://medium.com/@tahamalas/animate-theme-change-with-circular-scale-animations-195836c42517"  target="_blank">Medium</a>
 ## Where we are going with this
 
 We are trying to implement more animations to enhance the package even more, so please don't hesitate to let us know the ideas you have in mind so that we can work on making it available for the public.
