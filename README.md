@@ -34,7 +34,7 @@ Result | ![](https://media.giphy.com/media/QZDvnOBXsn1qVE8H4B/source.gif) | ![](
 
 We'll start by declaring our light and dark themes first
 
-```
+```dart
 final lightTheme = ThemeData(
         brightness: Brightness.light,
         primaryColor: Colors.white,
@@ -49,7 +49,7 @@ final lightTheme = ThemeData(
       );
 ```
 
-```
+```dart
 final darkTheme = ThemeData(
         brightness: Brightness.dark,
         primaryColor: Colors.black,
@@ -66,14 +66,14 @@ final darkTheme = ThemeData(
 
 Now import the package files
 
-```
+```dart
 import 'package:flutter_animated_theme/animated_theme_app.dart';
 import 'package:flutter_animated_theme/animation_type.dart';
 ```
 
 Then you will have to use a custom application that is inside the package, it only adds the animation feature to your app, so you'll still be getting all the features that a normal MaterialApp uses, in your build function for the app class add this.
 
-```
+```dart
 return AnimatedThemeApp(
       debugShowCheckedModeBanner: false,
       themeMode: ThemeMode.light,
@@ -87,7 +87,7 @@ Now you will be getting the default animation which is Fade in that comes right 
 
 You can customize it like this.
 
-```
+```dart
 return AnimatedThemeApp(
       debugShowCheckedModeBanner: false,
       themeMode: ThemeMode.light,
@@ -102,7 +102,7 @@ return AnimatedThemeApp(
 
 You can change the animation type to one of the currently implemented animations.
 
-```
+```dart
 enum AnimationType {
   FADE_ANIMATED_THEME,
   SCALE_ANIMATED_THEME,
