@@ -1,6 +1,6 @@
 name: flutter_animated_theme
 description: Animate theme change with circular, scale and fade animations
-version: 0.5.0
+version: 0.5.0+1
 homepage: https://github.com/TahaMalas/flutter_animated_theme.git
 
 environment:

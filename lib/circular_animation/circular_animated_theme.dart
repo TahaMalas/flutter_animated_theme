@@ -98,20 +98,31 @@ class CircularAnimatedThemeState extends State<CircularAnimatedTheme>
       children: <Widget>[
         CaptureWidget(
           key: _captureKey,
-          child: (animation.value == 0 || animation.value == 1) &&
-                  animationController.status != AnimationStatus.forward
-              ? Theme(
+          child: IndexedStack(
+            index: (animation.value == 0 || animation.value == 1) &&
+                animationController.status != AnimationStatus.forward
+                ? 0
+                : 1,
+            children: <Widget>[
+              Visibility(
+                maintainState: true,
+                child: Theme(
                   isMaterialAppTheme: widget.isMaterialAppTheme,
                   child: widget.child,
                   data: _data.end,
-                )
-              : SizedBox.expand(
-                  child: Image.memory(
-                    _image.data,
-                    height: MediaQuery.of(context).size.height,
-                    width: MediaQuery.of(context).size.width,
-                  ),
                 ),
+              ),
+              _image != null
+                  ? SizedBox.expand(
+                child: Image.memory(
+                  _image.data,
+                  height: MediaQuery.of(context).size.height,
+                  width: MediaQuery.of(context).size.width,
+                ),
+              )
+                  : Container(),
+            ],
+          )
         ),
         RectGetter(
           key: rectGetterKey,
