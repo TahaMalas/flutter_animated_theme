@@ -16,7 +16,7 @@ Customize animation on theme changing in Flutter, the idea was inspired by the T
 
 ```yaml
 dependencies:
-  flutter_animated_theme: ^0.5.0+1
+  flutter_animated_theme: ^0.5.0+2
 ```
 
 ## Available animations
