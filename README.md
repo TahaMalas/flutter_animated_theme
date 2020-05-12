@@ -112,6 +112,7 @@ enum AnimationType {
 
 Also change the animation duration to fit your needs.
 
+Now if you want to switch the themes, you have to let the light and dark themes as they are, and change the ThemeMode value to be dark or light according to your user's preferences
 
 ## Current issues
 There is an issue that is currently appearing in the console while animating between two themes with circular animation, it does not affect the animation process.
