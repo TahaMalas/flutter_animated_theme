@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 
@@ -29,7 +28,7 @@ class FadeAnimatedTheme extends ImplicitlyAnimatedWidget {
     Duration duration = kThemeAnimationDuration,
     VoidCallback onEnd,
     @required this.child,
-  }) : assert(child != null),
+  })  : assert(child != null),
         assert(data != null),
         super(key: key, curve: curve, duration: duration, onEnd: onEnd);
 
@@ -48,13 +47,15 @@ class FadeAnimatedTheme extends ImplicitlyAnimatedWidget {
   _FadeAnimatedThemeState createState() => _FadeAnimatedThemeState();
 }
 
-class _FadeAnimatedThemeState extends AnimatedWidgetBaseState<FadeAnimatedTheme> {
+class _FadeAnimatedThemeState
+    extends AnimatedWidgetBaseState<FadeAnimatedTheme> {
   ThemeDataTween _data;
 
   @override
   void forEachTween(TweenVisitor<dynamic> visitor) {
     // TODO(ianh): Use constructor tear-offs when it becomes possible
-    _data = visitor(_data, widget.data, (dynamic value) => ThemeDataTween(begin: value));
+    _data = visitor(
+        _data, widget.data, (dynamic value) => ThemeDataTween(begin: value));
     assert(_data != null);
   }
 
@@ -70,6 +71,7 @@ class _FadeAnimatedThemeState extends AnimatedWidgetBaseState<FadeAnimatedTheme>
   @override
   void debugFillProperties(DiagnosticPropertiesBuilder description) {
     super.debugFillProperties(description);
-    description.add(DiagnosticsProperty<ThemeDataTween>('data', _data, showName: false, defaultValue: null));
+    description.add(DiagnosticsProperty<ThemeDataTween>('data', _data,
+        showName: false, defaultValue: null));
   }
 }

@@ -1,3 +1,10 @@
+## 0.9.0-dev.1
+
+A beta version to test these issues
+
+* Fix blurry screenshot
+* Fix console issues
+
 ## 0.5.0+2
 
 * Update README.md

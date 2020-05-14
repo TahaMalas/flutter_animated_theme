@@ -1,4 +1,3 @@
-
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
@@ -51,7 +50,6 @@ class ScaleAnimatedTheme extends ImplicitlyAnimatedWidget {
 class _AnimatedThemeState extends AnimatedWidgetBaseState<ScaleAnimatedTheme> {
   ThemeDataTween _data;
 
-  static final backgroundKey = const Key('Key1');
   static final foregroundKey = const Key('Key2');
 
   @override
@@ -68,20 +66,20 @@ class _AnimatedThemeState extends AnimatedWidgetBaseState<ScaleAnimatedTheme> {
       children: <Widget>[
         animation.value != 0
             ? ScaleTransition(
-          scale: animation,
-          child: Theme(
-            key: foregroundKey,
-            isMaterialAppTheme: widget.isMaterialAppTheme,
-            child: widget.child,
-            data: widget.data,
-          ),
-        )
+                scale: animation,
+                child: Theme(
+                  key: foregroundKey,
+                  isMaterialAppTheme: widget.isMaterialAppTheme,
+                  child: widget.child,
+                  data: widget.data,
+                ),
+              )
             : Theme(
-          key: foregroundKey,
-          isMaterialAppTheme: widget.isMaterialAppTheme,
-          child: widget.child,
-          data: _data.evaluate(animation),
-        ),
+                key: foregroundKey,
+                isMaterialAppTheme: widget.isMaterialAppTheme,
+                child: widget.child,
+                data: _data.evaluate(animation),
+              ),
       ],
     );
   }
