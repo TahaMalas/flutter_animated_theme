@@ -22,8 +22,8 @@ class CaptureWidgetState extends State<CaptureWidget> {
   void captureImage(Function(CaptureResult) onCapture) async {
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       final boundary = _boundaryKey.currentContext.findRenderObject()
-      as RenderRepaintBoundary;
-      final image = await boundary.toImage();
+          as RenderRepaintBoundary;
+      final image = await boundary.toImage(pixelRatio: 2);
       final data = await image.toByteData(format: ImageByteFormat.png);
       onCapture(
           CaptureResult(data.buffer.asUint8List(), image.width, image.height));

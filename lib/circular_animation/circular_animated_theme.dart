@@ -67,6 +67,7 @@ class CircularAnimatedThemeState extends State<CircularAnimatedTheme>
   Rect rect;
   CaptureResult _image;
   final _captureKey = GlobalKey<CaptureWidgetState>();
+  final _globalKey = GlobalKey();
 
   void startAnimation() {
     _takeScreenShot();
@@ -94,49 +95,53 @@ class CircularAnimatedThemeState extends State<CircularAnimatedTheme>
 
   @override
   Widget build(BuildContext context) {
-    return Stack(
-      children: <Widget>[
-        CaptureWidget(
-          key: _captureKey,
-          child: IndexedStack(
-            index: (animation.value == 0 || animation.value == 1) &&
-                animationController.status != AnimationStatus.forward
-                ? 0
-                : 1,
-            children: <Widget>[
-              Visibility(
-                maintainState: true,
-                child: Theme(
-                  isMaterialAppTheme: widget.isMaterialAppTheme,
-                  child: widget.child,
-                  data: _data.end,
-                ),
+    List<Widget> children = [];
+    if ((animation.value == 0 || animation.value == 1) &&
+        animationController.status != AnimationStatus.forward) {
+      children.addAll(
+        [
+          CaptureWidget(
+            key: _captureKey,
+            child: _theme(),
+          ),
+          RectGetter(
+            key: rectGetterKey,
+            child: Container(
+              alignment: Alignment.topLeft,
+              width: 5,
+              height: 5,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
               ),
-              _image != null
-                  ? SizedBox.expand(
-                child: Image.memory(
-                  _image.data,
-                  height: MediaQuery.of(context).size.height,
-                  width: MediaQuery.of(context).size.width,
-                ),
-              )
-                  : Container(),
-            ],
-          )
-        ),
-        RectGetter(
-          key: rectGetterKey,
-          child: Container(
-            alignment: Alignment.topLeft,
-            width: 5,
-            height: 5,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
             ),
           ),
-        ),
-        _ripple(),
-      ],
+        ],
+      );
+    } else {
+      children.addAll(
+        [
+          SizedBox.expand(
+            child: Image.memory(
+              _image.data,
+              height: MediaQuery.of(context).size.height,
+              width: MediaQuery.of(context).size.width,
+            ),
+          ),
+          _ripple(),
+        ],
+      );
+    }
+    return Stack(
+      children: children,
+    );
+  }
+
+  Widget _theme() {
+    return Theme(
+      key: _globalKey,
+      isMaterialAppTheme: widget.isMaterialAppTheme,
+      child: widget.child,
+      data: _data.end,
     );
   }
 
@@ -170,20 +175,14 @@ class CircularAnimatedThemeState extends State<CircularAnimatedTheme>
     }
     return AnimatedBuilder(
       animation: animation,
-      child: widget.child,
+      child: _theme(),
       builder: (BuildContext context, Widget child) {
         return ClipPath(
           clipper: CircularRevealClipper(
             fraction: animation.value,
             centerOffset: Offset(0, 0),
           ),
-          child: animation.value > 0 && animation.value < 1
-              ? Theme(
-                  isMaterialAppTheme: widget.isMaterialAppTheme,
-                  child: child,
-                  data: _data.end,
-                )
-              : Container(),
+          child: child,
         );
       },
     );

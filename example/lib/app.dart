@@ -14,7 +14,7 @@ class _AppState extends State<App> with SingleTickerProviderStateMixin {
   Widget build(BuildContext context) {
     return AnimatedThemeApp(
       debugShowCheckedModeBanner: false,
-      themeMode: ThemeMode.dark,
+      themeMode: ThemeMode.light,
       animationDuration: Duration(milliseconds: 2000),
       animationType: AnimationType.CIRCULAR_ANIMATED_THEME,
       theme: ThemeData(
