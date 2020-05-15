@@ -480,12 +480,6 @@ class _MaterialScrollBehavior extends ScrollBehavior {
           axisDirection: axisDirection,
           color: Theme.of(context).accentColor,
         );
-      case TargetPlatform.linux:
-        break;
-      case TargetPlatform.macOS:
-        break;
-      case TargetPlatform.windows:
-        break;
     }
     return null;
   }
