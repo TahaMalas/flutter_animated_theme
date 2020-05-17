@@ -1,3 +1,10 @@
+## 0.9.0
+
+Release version of 
+
+* Fix blurry screenshot
+* Fix console issues
+
 ## 0.9.0-dev.1
 
 A beta version to test these issues
