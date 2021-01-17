@@ -601,7 +601,9 @@ class _AnimatedThemeAppState extends State<AnimatedThemeApp> {
             } else
               endTheme ??= widget.theme ?? ThemeData.fallback();
 
-            if (lastThemeMode != mode && key.currentState != null) {
+//             if (lastThemeMode != mode && key.currentState != null) {
+            /// To be able to change theme even in the same dark/light theme mode (for example when we have multiple color schemes for each dark/light theme.
+                        if (key.currentState != null) {
               key.currentState.startAnimation();
             }
             lastThemeMode = mode;
