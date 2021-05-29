@@ -1,6 +1,10 @@
+## 1.0.0
+
+Migrate to Flutter 2 and Null-safety
+
 ## 0.9.0
 
-Release version of 
+Release version of
 
 * Fix blurry screenshot
 * Fix console issues

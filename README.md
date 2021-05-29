@@ -1,11 +1,8 @@
 # flutter_animated_theme
 
-
-
 <p align="center">
   <img src="https://i.ibb.co/pLDxh3X/animated-theme-feature.png" />
 </p>
-
 
 
 Customize animation on theme changing in Flutter, the idea was inspired by the Telegram theme changing animation, I researched for it and did not find anything similar in Flutter, so that how this package spotted the light
@@ -16,7 +13,7 @@ Customize animation on theme changing in Flutter, the idea was inspired by the T
 
 ```yaml
 dependencies:
-  flutter_animated_theme: ^0.9.0
+  flutter_animated_theme: ^1.0.0
 ```
 
 ## Available animations

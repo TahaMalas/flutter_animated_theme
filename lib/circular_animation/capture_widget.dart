@@ -8,8 +8,8 @@ class CaptureWidget extends StatefulWidget {
   final Widget child;
 
   const CaptureWidget({
-    Key key,
-    this.child,
+    Key? key,
+    required this.child,
   }) : super(key: key);
 
   @override
@@ -20,13 +20,13 @@ class CaptureWidgetState extends State<CaptureWidget> {
   final _boundaryKey = GlobalKey();
 
   void captureImage(Function(CaptureResult) onCapture) async {
-    WidgetsBinding.instance.addPostFrameCallback((_) async {
-      final boundary = _boundaryKey.currentContext.findRenderObject()
+    WidgetsBinding.instance!.addPostFrameCallback((_) async {
+      final boundary = _boundaryKey.currentContext!.findRenderObject()
           as RenderRepaintBoundary;
       final image = await boundary.toImage(pixelRatio: 2);
       final data = await image.toByteData(format: ImageByteFormat.png);
       onCapture(
-          CaptureResult(data.buffer.asUint8List(), image.width, image.height));
+          CaptureResult(data!.buffer.asUint8List(), image.width, image.height));
     });
   }
 

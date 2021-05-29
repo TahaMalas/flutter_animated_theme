@@ -1,19 +1,19 @@
-// Copyright 2015 The Chromium Authors. All rights reserved.
+// Copyright 2014 The Flutter Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
 import 'dart:ui' as ui;
 
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/rendering.dart';
-import 'package:flutter/widgets.dart';
-import 'package:flutter_animated_theme/animation_type.dart';
 import 'package:flutter_animated_theme/circular_animation/circular_animated_theme.dart';
 import 'package:flutter_animated_theme/fade_animation/fade_animated_theme.dart';
 import 'package:flutter_animated_theme/scale_animation/scale_animated_theme.dart';
 
-/// [AnimatedThemeApp] uses this [TextStyle] as its [DefaultTextStyle] to encourage
+import 'animation_type.dart';
+
+/// [MaterialApp] uses this [TextStyle] as its [DefaultTextStyle] to encourage
 /// developers to be intentional about their [DefaultTextStyle].
 ///
 /// In Material Design, most [Text] widgets are contained in [Material] widgets,
@@ -31,14 +31,16 @@ const TextStyle _errorTextStyle = TextStyle(
   debugLabel: 'fallback style; consider putting your text in a Material',
 );
 
+
+
 /// An application that uses material design.
 ///
 /// A convenience widget that wraps a number of widgets that are commonly
 /// required for material design applications. It builds upon a [WidgetsApp] by
-/// adding material-design specific functionality, such as [custom.ScaleAnimatedTheme] and
+/// adding material-design specific functionality, such as [AnimatedTheme] and
 /// [GridPaper].
 ///
-/// The [AnimatedThemeApp] configures the top-level [Navigator] to search for routes
+/// The [MaterialApp] configures the top-level [Navigator] to search for routes
 /// in the following order:
 ///
 ///  1. For the `/` route, the [home] property, if non-null, is used.
@@ -53,7 +55,7 @@ const TextStyle _errorTextStyle = TextStyle(
 /// If a [Navigator] is created, at least one of these options must handle the
 /// `/` route, since it is used when an invalid [initialRoute] is specified on
 /// startup (e.g. by another application launching this one with an intent on
-/// Android; see [Window.defaultRouteName]).
+/// Android; see [dart:ui.PlatformDispatcher.defaultRouteName]).
 ///
 /// This widget also configures the observer of the top-level [Navigator] (if
 /// any) to perform [Hero] animations.
@@ -61,8 +63,8 @@ const TextStyle _errorTextStyle = TextStyle(
 /// If [home], [routes], [onGenerateRoute], and [onUnknownRoute] are all null,
 /// and [builder] is not null, then no [Navigator] is created.
 ///
-/// {@tool sample}
-/// This example shows how to create a [AnimatedThemeApp] that disables the "debug"
+/// {@tool snippet}
+/// This example shows how to create a [MaterialApp] that disables the "debug"
 /// banner with a [home] route that will be displayed when the app is launched.
 ///
 /// ![The MaterialApp displays a Scaffold ](https://flutter.github.io/assets-for-api-docs/assets/material/basic_material_app.png)
@@ -79,8 +81,8 @@ const TextStyle _errorTextStyle = TextStyle(
 /// ```
 /// {@end-tool}
 ///
-/// {@tool sample}
-/// This example shows how to create a [AnimatedThemeApp] that uses the [routes]
+/// {@tool snippet}
+/// This example shows how to create a [MaterialApp] that uses the [routes]
 /// `Map` to define the "home" route and an "about" route.
 ///
 /// ```dart
@@ -105,8 +107,8 @@ const TextStyle _errorTextStyle = TextStyle(
 /// ```
 /// {@end-tool}
 ///
-/// {@tool sample}
-/// This example shows how to create a [AnimatedThemeApp] that defines a [theme] that
+/// {@tool snippet}
+/// This example shows how to create a [MaterialApp] that defines a [theme] that
 /// will be used for material widgets in the app.
 ///
 /// ![The MaterialApp displays a Scaffold with a dark background and a blue / grey AppBar at the top](https://flutter.github.io/assets-for-api-docs/assets/material/theme_material_app.png)
@@ -146,25 +148,30 @@ class AnimatedThemeApp extends StatefulWidget {
   /// This class creates an instance of [WidgetsApp].
   ///
   /// The boolean arguments, [routes], and [navigatorObservers], must not be null.
-  AnimatedThemeApp({
-    Key key,
+  const AnimatedThemeApp({
+    Key? key,
     this.navigatorKey,
+    this.scaffoldMessengerKey,
     this.home,
-    this.routes = const <String, WidgetBuilder>{},
+    Map<String, WidgetBuilder> this.routes = const <String, WidgetBuilder>{},
     this.initialRoute,
     this.onGenerateRoute,
-    this.animationType = AnimationType.FADE_ANIMATED_THEME,
+    this.onGenerateInitialRoutes,
     this.onUnknownRoute,
-    this.navigatorObservers = const <NavigatorObserver>[],
+    List<NavigatorObserver> this.navigatorObservers =
+        const <NavigatorObserver>[],
     this.builder,
     this.title = '',
     this.onGenerateTitle,
     this.color,
     this.theme,
     this.darkTheme,
+    this.highContrastTheme,
+    this.highContrastDarkTheme,
     this.themeMode = ThemeMode.system,
-    this.locale,
+    this.animationType = AnimationType.FADE_ANIMATED_THEME,
     this.animationDuration = const Duration(milliseconds: 600),
+    this.locale,
     this.localizationsDelegates,
     this.localeListResolutionCallback,
     this.localeResolutionCallback,
@@ -175,6 +182,10 @@ class AnimatedThemeApp extends StatefulWidget {
     this.checkerboardOffscreenLayers = false,
     this.showSemanticsDebugger = false,
     this.debugShowCheckedModeBanner = true,
+    this.shortcuts,
+    this.actions,
+    this.restorationScopeId,
+    this.scrollBehavior,
   })  : assert(routes != null),
         assert(navigatorObservers != null),
         assert(title != null),
@@ -184,13 +195,78 @@ class AnimatedThemeApp extends StatefulWidget {
         assert(checkerboardOffscreenLayers != null),
         assert(showSemanticsDebugger != null),
         assert(debugShowCheckedModeBanner != null),
+        routeInformationProvider = null,
+        routeInformationParser = null,
+        routerDelegate = null,
+        backButtonDispatcher = null,
+        super(key: key);
+
+  /// Creates a [MaterialApp] that uses the [Router] instead of a [Navigator].
+  const AnimatedThemeApp.router({
+    Key? key,
+    this.scaffoldMessengerKey,
+    this.routeInformationProvider,
+    required RouteInformationParser<Object> this.routeInformationParser,
+    required RouterDelegate<Object> this.routerDelegate,
+    this.backButtonDispatcher,
+    this.builder,
+    this.title = '',
+    this.onGenerateTitle,
+    this.color,
+    this.theme,
+    this.animationType = AnimationType.FADE_ANIMATED_THEME,
+    this.animationDuration = const Duration(milliseconds: 600),
+    this.darkTheme,
+    this.highContrastTheme,
+    this.highContrastDarkTheme,
+    this.themeMode = ThemeMode.system,
+    this.locale,
+    this.localizationsDelegates,
+    this.localeListResolutionCallback,
+    this.localeResolutionCallback,
+    this.supportedLocales = const <Locale>[Locale('en', 'US')],
+    this.debugShowMaterialGrid = false,
+    this.showPerformanceOverlay = false,
+    this.checkerboardRasterCacheImages = false,
+    this.checkerboardOffscreenLayers = false,
+    this.showSemanticsDebugger = false,
+    this.debugShowCheckedModeBanner = true,
+    this.shortcuts,
+    this.actions,
+    this.restorationScopeId,
+    this.scrollBehavior,
+  })  : assert(routeInformationParser != null),
+        assert(routerDelegate != null),
+        assert(title != null),
+        assert(debugShowMaterialGrid != null),
+        assert(showPerformanceOverlay != null),
+        assert(checkerboardRasterCacheImages != null),
+        assert(checkerboardOffscreenLayers != null),
+        assert(showSemanticsDebugger != null),
+        assert(debugShowCheckedModeBanner != null),
+        navigatorObservers = null,
+        navigatorKey = null,
+        onGenerateRoute = null,
+        home = null,
+        onGenerateInitialRoutes = null,
+        onUnknownRoute = null,
+        routes = null,
+        initialRoute = null,
         super(key: key);
 
   /// {@macro flutter.widgets.widgetsApp.navigatorKey}
-  final GlobalKey<NavigatorState> navigatorKey;
+  final GlobalKey<NavigatorState>? navigatorKey;
+
+  /// A key to use when building the [ScaffoldMessenger].
+  ///
+  /// If a [scaffoldMessengerKey] is specified, the [ScaffoldMessenger] can be
+  /// directly manipulated without first obtaining it from a [BuildContext] via
+  /// [ScaffoldMessenger.of]: from the [scaffoldMessengerKey], use the
+  /// [GlobalKey.currentState] getter.
+  final GlobalKey<ScaffoldMessengerState>? scaffoldMessengerKey;
 
   /// {@macro flutter.widgets.widgetsApp.home}
-  final Widget home;
+  final Widget? home;
 
   /// The application's top-level routing table.
   ///
@@ -200,26 +276,41 @@ class AnimatedThemeApp extends StatefulWidget {
   /// an appropriate transition, including [Hero] animations, to the new route.
   ///
   /// {@macro flutter.widgets.widgetsApp.routes}
-  final Map<String, WidgetBuilder> routes;
+  final Map<String, WidgetBuilder>? routes;
 
   /// {@macro flutter.widgets.widgetsApp.initialRoute}
-  final String initialRoute;
+  final String? initialRoute;
 
   /// {@macro flutter.widgets.widgetsApp.onGenerateRoute}
-  final RouteFactory onGenerateRoute;
+  final RouteFactory? onGenerateRoute;
+
+  /// {@macro flutter.widgets.widgetsApp.onGenerateInitialRoutes}
+  final InitialRouteListFactory? onGenerateInitialRoutes;
 
   /// {@macro flutter.widgets.widgetsApp.onUnknownRoute}
-  final RouteFactory onUnknownRoute;
+  final RouteFactory? onUnknownRoute;
 
   /// {@macro flutter.widgets.widgetsApp.navigatorObservers}
-  final List<NavigatorObserver> navigatorObservers;
+  final List<NavigatorObserver>? navigatorObservers;
+
+  /// {@macro flutter.widgets.widgetsApp.routeInformationProvider}
+  final RouteInformationProvider? routeInformationProvider;
+
+  /// {@macro flutter.widgets.widgetsApp.routeInformationParser}
+  final RouteInformationParser<Object>? routeInformationParser;
+
+  /// {@macro flutter.widgets.widgetsApp.routerDelegate}
+  final RouterDelegate<Object>? routerDelegate;
+
+  /// {@macro flutter.widgets.widgetsApp.backButtonDispatcher}
+  final BackButtonDispatcher? backButtonDispatcher;
 
   /// {@macro flutter.widgets.widgetsApp.builder}
   ///
   /// Material specific features such as [showDialog] and [showMenu], and widgets
   /// such as [Tooltip], [PopupMenuButton], also require a [Navigator] to properly
   /// function.
-  final TransitionBuilder builder;
+  final TransitionBuilder? builder;
 
   /// {@macro flutter.widgets.widgetsApp.title}
   ///
@@ -229,7 +320,7 @@ class AnimatedThemeApp extends StatefulWidget {
   /// {@macro flutter.widgets.widgetsApp.onGenerateTitle}
   ///
   /// This value is passed unmodified to [WidgetsApp.onGenerateTitle].
-  final GenerateAppTitle onGenerateTitle;
+  final GenerateAppTitle? onGenerateTitle;
 
   final AnimationType animationType;
 
@@ -252,7 +343,7 @@ class AnimatedThemeApp extends StatefulWidget {
   ///    and [darkTheme] in [MaterialApp].
   ///  * [ThemeData.brightness], which indicates the [Brightness] of a theme's
   ///    colors.
-  final ThemeData theme;
+  final ThemeData? theme;
 
   /// The [ThemeData] to use when a 'dark mode' is requested by the system.
   ///
@@ -274,7 +365,36 @@ class AnimatedThemeApp extends StatefulWidget {
   ///    and [darkTheme] in [MaterialApp].
   ///  * [ThemeData.brightness], which is typically set to the value of
   ///    [MediaQueryData.platformBrightness].
-  final ThemeData darkTheme;
+  final ThemeData? darkTheme;
+
+  /// The [ThemeData] to use when 'high contrast' is requested by the system.
+  ///
+  /// Some host platforms (for example, iOS) allow the users to increase
+  /// contrast through an accessibility setting.
+  ///
+  /// Uses [theme] instead when null.
+  ///
+  /// See also:
+  ///
+  ///  * [MediaQueryData.highContrast], which indicates the platform's
+  ///    desire to increase contrast.
+  final ThemeData? highContrastTheme;
+
+  /// The [ThemeData] to use when a 'dark mode' and 'high contrast' is requested
+  /// by the system.
+  ///
+  /// Some host platforms (for example, iOS) allow the users to increase
+  /// contrast through an accessibility setting.
+  ///
+  /// This theme should have a [ThemeData.brightness] set to [Brightness.dark].
+  ///
+  /// Uses [darkTheme] instead when null.
+  ///
+  /// See also:
+  ///
+  ///  * [MediaQueryData.highContrast], which indicates the platform's
+  ///    desire to increase contrast.
+  final ThemeData? highContrastDarkTheme;
 
   /// Determines which theme will be used by the application if both [theme]
   /// and [darkTheme] are provided.
@@ -282,31 +402,31 @@ class AnimatedThemeApp extends StatefulWidget {
   /// If set to [ThemeMode.system], the choice of which theme to use will
   /// be based on the user's system preferences. If the [MediaQuery.platformBrightnessOf]
   /// is [Brightness.light], [theme] will be used. If it is [Brightness.dark],
-  /// [darkTheme] will be used (unless it is [null], in which case [theme]
+  /// [darkTheme] will be used (unless it is null, in which case [theme]
   /// will be used.
   ///
   /// If set to [ThemeMode.light] the [theme] will always be used,
   /// regardless of the user's system preference.
   ///
   /// If set to [ThemeMode.dark] the [darkTheme] will be used
-  /// regardless of the user's system preference. If [darkTheme] is [null]
+  /// regardless of the user's system preference. If [darkTheme] is null
   /// then it will fallback to using [theme].
   ///
   /// The default value is [ThemeMode.system].
   ///
   /// See also:
   ///
-  ///   * [theme], which is used when a light mode is selected.
-  ///   * [darkTheme], which is used when a dark mode is selected.
-  ///   * [ThemeData.brightness], which indicates to various parts of the
-  ///     system what kind of theme is being used.
-  final ThemeMode themeMode;
+  ///  * [theme], which is used when a light mode is selected.
+  ///  * [darkTheme], which is used when a dark mode is selected.
+  ///  * [ThemeData.brightness], which indicates to various parts of the
+  ///    system what kind of theme is being used.
+  final ThemeMode? themeMode;
 
   /// {@macro flutter.widgets.widgetsApp.color}
-  final Color color;
+  final Color? color;
 
   /// {@macro flutter.widgets.widgetsApp.locale}
-  final Locale locale;
+  final Locale? locale;
 
   /// {@macro flutter.widgets.widgetsApp.localizationsDelegates}
   ///
@@ -377,7 +497,7 @@ class AnimatedThemeApp extends StatefulWidget {
   /// }
   /// ```
   ///
-  /// Constructing a [AnimatedThemeApp] with a `FooLocalizationsDelegate` overrides
+  /// Constructing a [MaterialApp] with a `FooLocalizationsDelegate` overrides
   /// the automatically included delegate for [MaterialLocalizations] because
   /// only the first delegate of each [LocalizationsDelegate.type] is used and
   /// the automatically included delegates are added to the end of the app's
@@ -399,17 +519,17 @@ class AnimatedThemeApp extends StatefulWidget {
   ///    which provides material localizations for many languages.
   ///  * The Flutter Internationalization Tutorial,
   ///    <https://flutter.dev/tutorials/internationalization/>.
-  final Iterable<LocalizationsDelegate<dynamic>> localizationsDelegates;
+  final Iterable<LocalizationsDelegate<dynamic>>? localizationsDelegates;
 
   /// {@macro flutter.widgets.widgetsApp.localeListResolutionCallback}
   ///
   /// This callback is passed along to the [WidgetsApp] built by this widget.
-  final LocaleListResolutionCallback localeListResolutionCallback;
+  final LocaleListResolutionCallback? localeListResolutionCallback;
 
-  /// {@macro flutter.widgets.widgetsApp.localeResolutionCallback}
+  /// {@macro flutter.widgets.LocaleResolutionCallback}
   ///
   /// This callback is passed along to the [WidgetsApp] built by this widget.
-  final LocaleResolutionCallback localeResolutionCallback;
+  final LocaleResolutionCallback? localeResolutionCallback;
 
   /// {@macro flutter.widgets.widgetsApp.supportedLocales}
   ///
@@ -445,6 +565,87 @@ class AnimatedThemeApp extends StatefulWidget {
   /// {@macro flutter.widgets.widgetsApp.debugShowCheckedModeBanner}
   final bool debugShowCheckedModeBanner;
 
+  /// {@macro flutter.widgets.widgetsApp.shortcuts}
+  /// {@tool snippet}
+  /// This example shows how to add a single shortcut for
+  /// [LogicalKeyboardKey.select] to the default shortcuts without needing to
+  /// add your own [Shortcuts] widget.
+  ///
+  /// Alternatively, you could insert a [Shortcuts] widget with just the mapping
+  /// you want to add between the [WidgetsApp] and its child and get the same
+  /// effect.
+  ///
+  /// ```dart
+  /// Widget build(BuildContext context) {
+  ///   return WidgetsApp(
+  ///     shortcuts: <LogicalKeySet, Intent>{
+  ///       ... WidgetsApp.defaultShortcuts,
+  ///       LogicalKeySet(LogicalKeyboardKey.select): const ActivateIntent(),
+  ///     },
+  ///     color: const Color(0xFFFF0000),
+  ///     builder: (BuildContext context, Widget? child) {
+  ///       return const Placeholder();
+  ///     },
+  ///   );
+  /// }
+  /// ```
+  /// {@end-tool}
+  /// {@macro flutter.widgets.widgetsApp.shortcuts.seeAlso}
+  final Map<LogicalKeySet, Intent>? shortcuts;
+
+  /// {@macro flutter.widgets.widgetsApp.actions}
+  /// {@tool snippet}
+  /// This example shows how to add a single action handling an
+  /// [ActivateAction] to the default actions without needing to
+  /// add your own [Actions] widget.
+  ///
+  /// Alternatively, you could insert a [Actions] widget with just the mapping
+  /// you want to add between the [WidgetsApp] and its child and get the same
+  /// effect.
+  ///
+  /// ```dart
+  /// Widget build(BuildContext context) {
+  ///   return WidgetsApp(
+  ///     actions: <Type, Action<Intent>>{
+  ///       ... WidgetsApp.defaultActions,
+  ///       ActivateAction: CallbackAction<Intent>(
+  ///         onInvoke: (Intent intent) {
+  ///           // Do something here...
+  ///           return null;
+  ///         },
+  ///       ),
+  ///     },
+  ///     color: const Color(0xFFFF0000),
+  ///     builder: (BuildContext context, Widget? child) {
+  ///       return const Placeholder();
+  ///     },
+  ///   );
+  /// }
+  /// ```
+  /// {@end-tool}
+  /// {@macro flutter.widgets.widgetsApp.actions.seeAlso}
+  final Map<Type, Action<Intent>>? actions;
+
+  /// {@macro flutter.widgets.widgetsApp.restorationScopeId}
+  final String? restorationScopeId;
+
+  /// {@template flutter.material.materialApp.scrollBehavior}
+  /// The default [ScrollBehavior] for the application.
+  ///
+  /// [ScrollBehavior]s describe how [Scrollable] widgets behave. Providing
+  /// a [ScrollBehavior] can set the default [ScrollPhysics] across
+  /// an application, and manage [Scrollable] decorations like [Scrollbar]s and
+  /// [GlowingOverscrollIndicator]s.
+  /// {@endtemplate}
+  ///
+  /// When null, defaults to [MaterialScrollBehavior].
+  ///
+  /// See also:
+  ///
+  ///  * [ScrollConfiguration], which controls how [Scrollable] widgets behave
+  ///    in a subtree.
+  final ScrollBehavior? scrollBehavior;
+
   /// Turns on a [GridPaper] overlay that paints a baseline grid
   /// Material apps.
   ///
@@ -456,77 +657,102 @@ class AnimatedThemeApp extends StatefulWidget {
   final bool debugShowMaterialGrid;
 
   @override
-  _AnimatedThemeAppState createState() => _AnimatedThemeAppState();
+  _MaterialAppState createState() => _MaterialAppState();
+
+  /// The [HeroController] used for Material page transitions.
+  ///
+  /// Used by the [MaterialApp].
+  static HeroController createMaterialHeroController() {
+    return HeroController(
+      createRectTween: (Rect? begin, Rect? end) {
+        return MaterialRectArcTween(begin: begin, end: end);
+      },
+    );
+  }
 }
 
-class _MaterialScrollBehavior extends ScrollBehavior {
+/// Describes how [Scrollable] widgets behave for [MaterialApp]s.
+///
+/// {@macro flutter.widgets.scrollBehavior}
+///
+/// Setting a [MaterialScrollBehavior] will apply a
+/// [GlowingOverscrollIndicator] to [Scrollable] descendants when executing on
+/// [TargetPlatform.android] and [TargetPlatform.fuchsia].
+///
+/// When using the desktop platform, if the [Scrollable] widget scrolls in the
+/// [Axis.vertical], a [Scrollbar] is applied.
+///
+/// See also:
+///
+///  * [ScrollBehavior], the default scrolling behavior extended by this class.
+class MaterialScrollBehavior extends ScrollBehavior {
+  /// Creates a MaterialScrollBehavior that decorates [Scrollable]s with
+  /// [GlowingOverscrollIndicator]s and [Scrollbar]s based on the current
+  /// platform and provided [ScrollableDetails].
+  const MaterialScrollBehavior();
+
   @override
-  TargetPlatform getPlatform(BuildContext context) {
-    return Theme.of(context).platform;
+  TargetPlatform getPlatform(BuildContext context) =>
+      Theme.of(context).platform;
+
+  @override
+  Widget buildScrollbar(
+      BuildContext context, Widget child, ScrollableDetails details) {
+    // When modifying this function, consider modifying the implementation in
+    // the base class as well.
+    switch (axisDirectionToAxis(details.direction)) {
+      case Axis.horizontal:
+        return child;
+      case Axis.vertical:
+        switch (getPlatform(context)) {
+          case TargetPlatform.linux:
+          case TargetPlatform.macOS:
+          case TargetPlatform.windows:
+            return Scrollbar(
+              child: child,
+              controller: details.controller,
+            );
+          case TargetPlatform.android:
+          case TargetPlatform.fuchsia:
+          case TargetPlatform.iOS:
+            return child;
+        }
+    }
   }
 
   @override
-  Widget buildViewportChrome(
-      BuildContext context, Widget child, AxisDirection axisDirection) {
+  Widget buildOverscrollIndicator(
+      BuildContext context, Widget child, ScrollableDetails details) {
     // When modifying this function, consider modifying the implementation in
     // the base class as well.
     switch (getPlatform(context)) {
       case TargetPlatform.iOS:
+      case TargetPlatform.linux:
+      case TargetPlatform.macOS:
+      case TargetPlatform.windows:
         return child;
       case TargetPlatform.android:
       case TargetPlatform.fuchsia:
         return GlowingOverscrollIndicator(
           child: child,
-          axisDirection: axisDirection,
-          color: Theme.of(context).accentColor,
+          axisDirection: details.direction,
+          color: Theme.of(context).colorScheme.secondary,
         );
     }
-    return null;
   }
 }
 
-class _AnimatedThemeAppState extends State<AnimatedThemeApp> {
-  HeroController _heroController;
+class _MaterialAppState extends State<AnimatedThemeApp> {
+  late HeroController _heroController;
+  ThemeMode? lastThemeMode;
   GlobalKey<CircularAnimatedThemeState> key = GlobalKey();
-  ThemeMode lastThemeMode;
+
+  bool get _usesRouter => widget.routerDelegate != null;
 
   @override
   void initState() {
     super.initState();
-    _heroController = HeroController(createRectTween: _createRectTween);
-    _updateNavigator();
-  }
-
-  @override
-  void didUpdateWidget(AnimatedThemeApp oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (widget.navigatorKey != oldWidget.navigatorKey) {
-      // If the Navigator changes, we have to create a new observer, because the
-      // old Navigator won't be disposed (and thus won't unregister with its
-      // observers) until after the new one has been created (because the
-      // Navigator has a GlobalKey).
-      _heroController = HeroController(createRectTween: _createRectTween);
-    }
-    _updateNavigator();
-  }
-
-  List<NavigatorObserver> _navigatorObservers;
-
-  void _updateNavigator() {
-    if (widget.home != null ||
-        widget.routes.isNotEmpty ||
-        widget.onGenerateRoute != null ||
-        widget.onUnknownRoute != null) {
-      _navigatorObservers =
-          List<NavigatorObserver>.from(widget.navigatorObservers)
-            ..add(_heroController);
-    } else {
-      _navigatorObservers = const <NavigatorObserver>[];
-    }
-  }
-
-  RectTween _createRectTween(Rect begin, Rect end) {
-    return MaterialRectArcTween(begin: begin, end: end);
+    _heroController = MaterialApp.createMaterialHeroController();
   }
 
   // Combine the Localizations for Material with the ones contributed
@@ -536,174 +762,267 @@ class _AnimatedThemeAppState extends State<AnimatedThemeApp> {
   // _MaterialLocalizationsDelegate.
   Iterable<LocalizationsDelegate<dynamic>> get _localizationsDelegates sync* {
     if (widget.localizationsDelegates != null)
-      yield* widget.localizationsDelegates;
+      yield* widget.localizationsDelegates!;
     yield DefaultMaterialLocalizations.delegate;
     yield DefaultCupertinoLocalizations.delegate;
   }
 
-  @override
-  Widget build(BuildContext context) {
-    Widget result = WidgetsApp(
+  Widget _inspectorSelectButtonBuilder(
+      BuildContext context, VoidCallback onPressed) {
+    return FloatingActionButton(
+      child: const Icon(Icons.search),
+      onPressed: onPressed,
+      mini: true,
+    );
+  }
+
+  Widget _materialBuilder(BuildContext context, Widget? child) {
+    // Resolve which theme to use based on brightness and high contrast.
+    final ThemeMode mode = widget.themeMode ?? ThemeMode.system;
+
+    final Brightness platformBrightness =
+        MediaQuery.platformBrightnessOf(context);
+    final bool useDarkTheme = mode == ThemeMode.dark ||
+        (mode == ThemeMode.system && platformBrightness == ui.Brightness.dark);
+    final bool highContrast = MediaQuery.highContrastOf(context);
+    ThemeData? theme;
+
+    if (useDarkTheme && highContrast && widget.highContrastDarkTheme != null) {
+      theme = widget.highContrastDarkTheme;
+    } else if (useDarkTheme && widget.darkTheme != null) {
+      theme = widget.darkTheme;
+    } else if (highContrast && widget.highContrastTheme != null) {
+      theme = widget.highContrastTheme;
+    }
+    theme ??= widget.theme ?? ThemeData.light();
+    ThemeData? endTheme;
+
+    switch (widget.animationType) {
+      case AnimationType.FADE_ANIMATED_THEME:
+      case AnimationType.SCALE_ANIMATED_THEME:
+        if (widget.darkTheme != null) {
+          final ui.Brightness platformBrightness =
+          MediaQuery.platformBrightnessOf(context);
+          if (mode == ThemeMode.dark ||
+              (mode == ThemeMode.system &&
+                  platformBrightness == ui.Brightness.dark)) {
+            theme = widget.darkTheme;
+          }
+        }
+        theme ??= widget.theme ?? ThemeData.fallback();
+        break;
+      case AnimationType.CIRCULAR_ANIMATED_THEME:
+        if (widget.darkTheme != null) {
+          final ui.Brightness platformBrightness =
+          MediaQuery.platformBrightnessOf(context);
+          if (mode == ThemeMode.dark ||
+              (mode == ThemeMode.system &&
+                  platformBrightness == ui.Brightness.dark)) {
+            theme = widget.theme;
+          } else
+            theme ??= widget.darkTheme ?? ThemeData.fallback();
+        } else
+          theme ??= widget.darkTheme ?? ThemeData.fallback();
+
+        // Use a light theme, dark theme, or fallback theme.
+        if (widget.darkTheme != null) {
+          final ui.Brightness platformBrightness =
+          MediaQuery.platformBrightnessOf(context);
+          if (mode == ThemeMode.dark ||
+              (mode == ThemeMode.system &&
+                  platformBrightness == ui.Brightness.dark)) {
+            endTheme = widget.darkTheme!;
+          } else
+            endTheme = widget.theme ?? ThemeData.fallback();
+        } else
+          endTheme = widget.theme ?? ThemeData.fallback();
+
+        if (lastThemeMode != mode && key.currentState != null) {
+          key.currentState!.startAnimation();
+        }
+        lastThemeMode = mode;
+
+        break;
+    }
+
+
+    switch (widget.animationType) {
+      case AnimationType.FADE_ANIMATED_THEME:
+        return ScaffoldMessenger(
+          key: widget.scaffoldMessengerKey,
+          child: FadeAnimatedTheme(
+            duration: widget.animationDuration,
+            data: theme!,
+            isMaterialAppTheme: true,
+            child: widget.builder != null
+                ? Builder(
+              builder: (BuildContext context) {
+                // Why are we surrounding a builder with a builder?
+                //
+                // The widget.builder may contain code that invokes
+                // Theme.of(), which should return the theme we selected
+                // above in AnimatedTheme. However, if we invoke
+                // widget.builder() directly as the child of AnimatedTheme
+                // then there is no Context separating them, and the
+                // widget.builder() will not find the theme. Therefore, we
+                // surround widget.builder with yet another builder so that
+                // a context separates them and Theme.of() correctly
+                // resolves to the theme we passed to AnimatedTheme.
+                return widget.builder!(context, child);
+              },
+            )
+                : child!,
+          ),
+        );
+        break;
+      case AnimationType.SCALE_ANIMATED_THEME:
+        return ScaffoldMessenger(
+          key: widget.scaffoldMessengerKey,
+          child: ScaleAnimatedTheme(
+            duration: widget.animationDuration,
+            data: theme!,
+            isMaterialAppTheme: true,
+            child: widget.builder != null
+                ? Builder(
+              builder: (BuildContext context) {
+                // Why are we surrounding a builder with a builder?
+                //
+                // The widget.builder may contain code that invokes
+                // Theme.of(), which should return the theme we selected
+                // above in AnimatedTheme. However, if we invoke
+                // widget.builder() directly as the child of AnimatedTheme
+                // then there is no Context separating them, and the
+                // widget.builder() will not find the theme. Therefore, we
+                // surround widget.builder with yet another builder so that
+                // a context separates them and Theme.of() correctly
+                // resolves to the theme we passed to AnimatedTheme.
+                return widget.builder!(context, child);
+              },
+            )
+                : child!,
+          ),
+        );
+        break;
+      case AnimationType.CIRCULAR_ANIMATED_THEME:
+        return ScaffoldMessenger(
+          key: widget.scaffoldMessengerKey,
+          child: CircularAnimatedTheme(
+            key: key,
+            data: theme!,
+            end: endTheme!,
+            isMaterialAppTheme: true,
+            curve: Curves.ease,
+            duration: widget.animationDuration,
+            child: widget.builder != null
+                ? Builder(
+              builder: (BuildContext context) {
+                // Why are we surrounding a builder with a builder?
+                //
+                // The widget.builder may contain code that invokes
+                // Theme.of(), which should return the theme we selected
+                // above in AnimatedTheme. However, if we invoke
+                // widget.builder() directly as the child of AnimatedTheme
+                // then there is no Context separating them, and the
+                // widget.builder() will not find the theme. Therefore, we
+                // surround widget.builder with yet another builder so that
+                // a context separates them and Theme.of() correctly
+                // resolves to the theme we passed to AnimatedTheme.
+                return widget.builder!(context, child);
+              },
+            )
+                : child!,
+          ),
+        );
+        break;
+      default:
+        throw Exception('Animation type error');
+        break;
+    }
+
+
+    return ScaffoldMessenger(
+      key: widget.scaffoldMessengerKey,
+      child: AnimatedTheme(
+        data: theme!,
+        child: widget.builder != null
+            ? Builder(
+                builder: (BuildContext context) {
+                  // Why are we surrounding a builder with a builder?
+                  //
+                  // The widget.builder may contain code that invokes
+                  // Theme.of(), which should return the theme we selected
+                  // above in AnimatedTheme. However, if we invoke
+                  // widget.builder() directly as the child of AnimatedTheme
+                  // then there is no Context separating them, and the
+                  // widget.builder() will not find the theme. Therefore, we
+                  // surround widget.builder with yet another builder so that
+                  // a context separates them and Theme.of() correctly
+                  // resolves to the theme we passed to AnimatedTheme.
+                  return widget.builder!(context, child);
+                },
+              )
+            : child!,
+      ),
+    );
+  }
+
+  Widget _buildWidgetApp(BuildContext context) {
+    // The color property is always pulled from the light theme, even if dark
+    // mode is activated. This was done to simplify the technical details
+    // of switching themes and it was deemed acceptable because this color
+    // property is only used on old Android OSes to color the app bar in
+    // Android's switcher UI.
+    //
+    // blue is the primary color of the default theme.
+    final Color materialColor =
+        widget.color ?? widget.theme?.primaryColor ?? Colors.blue;
+    if (_usesRouter) {
+      return WidgetsApp.router(
+        key: GlobalObjectKey(this),
+        routeInformationProvider: widget.routeInformationProvider,
+        routeInformationParser: widget.routeInformationParser!,
+        routerDelegate: widget.routerDelegate!,
+        backButtonDispatcher: widget.backButtonDispatcher,
+        builder: _materialBuilder,
+        title: widget.title,
+        onGenerateTitle: widget.onGenerateTitle,
+        textStyle: _errorTextStyle,
+        color: materialColor,
+        locale: widget.locale,
+        localizationsDelegates: _localizationsDelegates,
+        localeResolutionCallback: widget.localeResolutionCallback,
+        localeListResolutionCallback: widget.localeListResolutionCallback,
+        supportedLocales: widget.supportedLocales,
+        showPerformanceOverlay: widget.showPerformanceOverlay,
+        checkerboardRasterCacheImages: widget.checkerboardRasterCacheImages,
+        checkerboardOffscreenLayers: widget.checkerboardOffscreenLayers,
+        showSemanticsDebugger: widget.showSemanticsDebugger,
+        debugShowCheckedModeBanner: widget.debugShowCheckedModeBanner,
+        inspectorSelectButtonBuilder: _inspectorSelectButtonBuilder,
+        shortcuts: widget.shortcuts,
+        actions: widget.actions,
+        restorationScopeId: widget.restorationScopeId,
+      );
+    }
+
+    return WidgetsApp(
       key: GlobalObjectKey(this),
       navigatorKey: widget.navigatorKey,
-      navigatorObservers: _navigatorObservers,
+      navigatorObservers: widget.navigatorObservers!,
       pageRouteBuilder: <T>(RouteSettings settings, WidgetBuilder builder) {
         return MaterialPageRoute<T>(settings: settings, builder: builder);
       },
       home: widget.home,
-      routes: widget.routes,
+      routes: widget.routes!,
       initialRoute: widget.initialRoute,
       onGenerateRoute: widget.onGenerateRoute,
+      onGenerateInitialRoutes: widget.onGenerateInitialRoutes,
       onUnknownRoute: widget.onUnknownRoute,
-      builder: (BuildContext context, Widget child) {
-        // Use a light theme, dark theme, or fallback theme.
-        final ThemeMode mode = widget.themeMode ?? ThemeMode.system;
-        ThemeData theme;
-        ThemeData endTheme;
-
-        switch (widget.animationType) {
-          case AnimationType.FADE_ANIMATED_THEME:
-          case AnimationType.SCALE_ANIMATED_THEME:
-            if (widget.darkTheme != null) {
-              final ui.Brightness platformBrightness =
-                  MediaQuery.platformBrightnessOf(context);
-              if (mode == ThemeMode.dark ||
-                  (mode == ThemeMode.system &&
-                      platformBrightness == ui.Brightness.dark)) {
-                theme = widget.darkTheme;
-              }
-            }
-            theme ??= widget.theme ?? ThemeData.fallback();
-            break;
-          case AnimationType.CIRCULAR_ANIMATED_THEME:
-            if (widget.darkTheme != null) {
-              final ui.Brightness platformBrightness =
-                  MediaQuery.platformBrightnessOf(context);
-              if (mode == ThemeMode.dark ||
-                  (mode == ThemeMode.system &&
-                      platformBrightness == ui.Brightness.dark)) {
-                theme = widget.theme;
-              } else
-                theme ??= widget.darkTheme ?? ThemeData.fallback();
-            } else
-              theme ??= widget.darkTheme ?? ThemeData.fallback();
-
-            // Use a light theme, dark theme, or fallback theme.
-            if (widget.darkTheme != null) {
-              final ui.Brightness platformBrightness =
-                  MediaQuery.platformBrightnessOf(context);
-              if (mode == ThemeMode.dark ||
-                  (mode == ThemeMode.system &&
-                      platformBrightness == ui.Brightness.dark)) {
-                endTheme = widget.darkTheme;
-              } else
-                endTheme ??= widget.theme ?? ThemeData.fallback();
-            } else
-              endTheme ??= widget.theme ?? ThemeData.fallback();
-
-            if (lastThemeMode != mode && key.currentState != null) {
-              key.currentState.startAnimation();
-            }
-            lastThemeMode = mode;
-
-            break;
-        }
-
-        switch (widget.animationType) {
-          case AnimationType.FADE_ANIMATED_THEME:
-            return FadeAnimatedTheme(
-              duration: widget.animationDuration,
-              data: theme,
-              isMaterialAppTheme: true,
-              child: widget.builder != null
-                  ? Builder(
-                      builder: (BuildContext context) {
-                        // Why are we surrounding a builder with a builder?
-                        //
-                        // The widget.builder may contain code that invokes
-                        // Theme.of(), which should return the theme we selected
-                        // above in AnimatedTheme. However, if we invoke
-                        // widget.builder() directly as the child of AnimatedTheme
-                        // then there is no Context separating them, and the
-                        // widget.builder() will not find the theme. Therefore, we
-                        // surround widget.builder with yet another builder so that
-                        // a context separates them and Theme.of() correctly
-                        // resolves to the theme we passed to AnimatedTheme.
-                        return widget.builder(context, child);
-                      },
-                    )
-                  : child,
-            );
-            break;
-          case AnimationType.SCALE_ANIMATED_THEME:
-            return ScaleAnimatedTheme(
-              duration: widget.animationDuration,
-              data: theme,
-              isMaterialAppTheme: true,
-              child: widget.builder != null
-                  ? Builder(
-                      builder: (BuildContext context) {
-                        // Why are we surrounding a builder with a builder?
-                        //
-                        // The widget.builder may contain code that invokes
-                        // Theme.of(), which should return the theme we selected
-                        // above in AnimatedTheme. However, if we invoke
-                        // widget.builder() directly as the child of AnimatedTheme
-                        // then there is no Context separating them, and the
-                        // widget.builder() will not find the theme. Therefore, we
-                        // surround widget.builder with yet another builder so that
-                        // a context separates them and Theme.of() correctly
-                        // resolves to the theme we passed to AnimatedTheme.
-                        return widget.builder(context, child);
-                      },
-                    )
-                  : child,
-            );
-            break;
-          case AnimationType.CIRCULAR_ANIMATED_THEME:
-            return CircularAnimatedTheme(
-              key: key,
-              data: theme,
-              end: endTheme,
-              isMaterialAppTheme: true,
-              curve: Curves.ease,
-              duration: widget.animationDuration,
-              child: widget.builder != null
-                  ? Builder(
-                      builder: (BuildContext context) {
-                        // Why are we surrounding a builder with a builder?
-                        //
-                        // The widget.builder may contain code that invokes
-                        // Theme.of(), which should return the theme we selected
-                        // above in AnimatedTheme. However, if we invoke
-                        // widget.builder() directly as the child of AnimatedTheme
-                        // then there is no Context separating them, and the
-                        // widget.builder() will not find the theme. Therefore, we
-                        // surround widget.builder with yet another builder so that
-                        // a context separates them and Theme.of() correctly
-                        // resolves to the theme we passed to AnimatedTheme.
-                        return widget.builder(context, child);
-                      },
-                    )
-                  : child,
-            );
-            break;
-          default:
-            throw Exception('Animation type error');
-            break;
-        }
-      },
+      builder: _materialBuilder,
       title: widget.title,
       onGenerateTitle: widget.onGenerateTitle,
       textStyle: _errorTextStyle,
-      // The color property is always pulled from the light theme, even if dark
-      // mode is activated. This was done to simplify the technical details
-      // of switching themes and it was deemed acceptable because this color
-      // property is only used on old Android OSes to color the app bar in
-      // Android's switcher UI.
-      //
-      // blue is the primary color of the default theme
-      color: widget.color ?? widget.theme?.primaryColor ?? Colors.blue,
+      color: materialColor,
       locale: widget.locale,
       localizationsDelegates: _localizationsDelegates,
       localeResolutionCallback: widget.localeResolutionCallback,
@@ -714,15 +1033,16 @@ class _AnimatedThemeAppState extends State<AnimatedThemeApp> {
       checkerboardOffscreenLayers: widget.checkerboardOffscreenLayers,
       showSemanticsDebugger: widget.showSemanticsDebugger,
       debugShowCheckedModeBanner: widget.debugShowCheckedModeBanner,
-      inspectorSelectButtonBuilder:
-          (BuildContext context, VoidCallback onPressed) {
-        return FloatingActionButton(
-          child: const Icon(Icons.search),
-          onPressed: onPressed,
-          mini: true,
-        );
-      },
+      inspectorSelectButtonBuilder: _inspectorSelectButtonBuilder,
+      shortcuts: widget.shortcuts,
+      actions: widget.actions,
+      restorationScopeId: widget.restorationScopeId,
     );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    Widget result = _buildWidgetApp(context);
 
     assert(() {
       if (widget.debugShowMaterialGrid) {
@@ -738,8 +1058,11 @@ class _AnimatedThemeAppState extends State<AnimatedThemeApp> {
     }());
 
     return ScrollConfiguration(
-      behavior: _MaterialScrollBehavior(),
-      child: result,
+      behavior: widget.scrollBehavior ?? const MaterialScrollBehavior(),
+      child: HeroControllerScope(
+        controller: _heroController,
+        child: result,
+      ),
     );
   }
 }

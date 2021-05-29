@@ -27,17 +27,15 @@ class CircularAnimatedTheme extends StatefulWidget {
   /// By default, the theme transition uses a linear curve. The [data] and
   /// [child] arguments must not be null.
   const CircularAnimatedTheme({
-    Key key,
-    @required this.data,
-    @required this.end,
+    Key? key,
+    required this.data,
+    required this.end,
     this.isMaterialAppTheme = false,
     Curve curve = Curves.linear,
     this.duration = kThemeAnimationDuration,
-    VoidCallback onEnd,
-    @required this.child,
-  })  : assert(child != null),
-        assert(data != null),
-        super(key: key);
+    VoidCallback? onEnd,
+    required this.child,
+  }) : super(key: key);
 
   /// Specifies the color and typography values for descendant widgets.
   final ThemeData data;
@@ -58,14 +56,14 @@ class CircularAnimatedTheme extends StatefulWidget {
 
 class CircularAnimatedThemeState extends State<CircularAnimatedTheme>
     with SingleTickerProviderStateMixin {
-  ThemeDataTween _data;
+  late ThemeDataTween _data;
 
-  Duration animationDuration;
-  AnimationController animationController;
-  Animation animation;
-  GlobalKey rectGetterKey = RectGetter.createGlobalKey();
-  Rect rect;
-  CaptureResult _image;
+  late Duration animationDuration;
+  late AnimationController animationController;
+  late Animation animation;
+  final rectGetterKey = RectGetter.createGlobalKey();
+  Rect? rect;
+  CaptureResult? _image;
   final _captureKey = GlobalKey<CaptureWidgetState>();
   final _globalKey = GlobalKey();
 
@@ -122,7 +120,7 @@ class CircularAnimatedThemeState extends State<CircularAnimatedTheme>
         [
           SizedBox.expand(
             child: Image.memory(
-              _image.data,
+              _image!.data,
               height: MediaQuery.of(context).size.height,
               width: MediaQuery.of(context).size.width,
             ),
@@ -139,14 +137,13 @@ class CircularAnimatedThemeState extends State<CircularAnimatedTheme>
   Widget _theme() {
     return Theme(
       key: _globalKey,
-      isMaterialAppTheme: widget.isMaterialAppTheme,
       child: widget.child,
-      data: _data.end,
+      data: _data.end!,
     );
   }
 
   _takeScreenShot() {
-    _captureKey.currentState.captureImage((image) {
+    _captureKey.currentState!.captureImage((image) {
       precacheImage(MemoryImage(image.data), context).then((cachedImage) {
         setState(() {
           _image = image;
@@ -163,9 +160,9 @@ class CircularAnimatedThemeState extends State<CircularAnimatedTheme>
 
   void _onChangeTheme() async {
     setState(() => rect = RectGetter.getRectFromKey(rectGetterKey));
-    WidgetsBinding.instance.addPostFrameCallback((_) {
+    WidgetsBinding.instance!.addPostFrameCallback((_) {
       setState(() =>
-          rect = rect.inflate(1.3 * MediaQuery.of(context).size.longestSide));
+          rect = rect!.inflate(1.3 * MediaQuery.of(context).size.longestSide));
     });
   }
 
@@ -176,7 +173,7 @@ class CircularAnimatedThemeState extends State<CircularAnimatedTheme>
     return AnimatedBuilder(
       animation: animation,
       child: _theme(),
-      builder: (BuildContext context, Widget child) {
+      builder: (BuildContext context, Widget? child) {
         return ClipPath(
           clipper: CircularRevealClipper(
             fraction: animation.value,

@@ -21,13 +21,13 @@ class FadeAnimatedTheme extends ImplicitlyAnimatedWidget {
   /// By default, the theme transition uses a linear curve. The [data] and
   /// [child] arguments must not be null.
   const FadeAnimatedTheme({
-    Key key,
-    @required this.data,
+    Key? key,
+    required this.data,
     this.isMaterialAppTheme = false,
     Curve curve = Curves.linear,
     Duration duration = kThemeAnimationDuration,
-    VoidCallback onEnd,
-    @required this.child,
+    VoidCallback? onEnd,
+    required this.child,
   })  : assert(child != null),
         assert(data != null),
         super(key: key, curve: curve, duration: duration, onEnd: onEnd);
@@ -49,22 +49,20 @@ class FadeAnimatedTheme extends ImplicitlyAnimatedWidget {
 
 class _FadeAnimatedThemeState
     extends AnimatedWidgetBaseState<FadeAnimatedTheme> {
-  ThemeDataTween _data;
+  ThemeDataTween? _data;
 
   @override
   void forEachTween(TweenVisitor<dynamic> visitor) {
-    // TODO(ianh): Use constructor tear-offs when it becomes possible
     _data = visitor(
-        _data, widget.data, (dynamic value) => ThemeDataTween(begin: value));
+        _data, widget.data, (dynamic value) => ThemeDataTween(begin: value))! as ThemeDataTween?;
     assert(_data != null);
   }
 
   @override
   Widget build(BuildContext context) {
     return Theme(
-      isMaterialAppTheme: widget.isMaterialAppTheme,
       child: widget.child,
-      data: _data.evaluate(animation),
+      data: _data!.evaluate(animation),
     );
   }
 

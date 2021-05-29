@@ -21,13 +21,13 @@ class ScaleAnimatedTheme extends ImplicitlyAnimatedWidget {
   /// By default, the theme transition uses a linear curve. The [data] and
   /// [child] arguments must not be null.
   const ScaleAnimatedTheme({
-    Key key,
-    @required this.data,
+    Key? key,
+    required this.data,
     this.isMaterialAppTheme = false,
     Curve curve = Curves.linear,
     Duration duration = kThemeAnimationDuration,
-    VoidCallback onEnd,
-    @required this.child,
+    VoidCallback? onEnd,
+    required this.child,
   })  : assert(child != null),
         assert(data != null),
         super(key: key, curve: curve, duration: duration, onEnd: onEnd);
@@ -48,7 +48,7 @@ class ScaleAnimatedTheme extends ImplicitlyAnimatedWidget {
 }
 
 class _AnimatedThemeState extends AnimatedWidgetBaseState<ScaleAnimatedTheme> {
-  ThemeDataTween _data;
+  ThemeDataTween? _data;
 
   static final foregroundKey = const Key('Key2');
 
@@ -56,7 +56,7 @@ class _AnimatedThemeState extends AnimatedWidgetBaseState<ScaleAnimatedTheme> {
   void forEachTween(TweenVisitor<dynamic> visitor) {
     // TODO(ianh): Use constructor tear-offs when it becomes possible
     _data = visitor(
-        _data, widget.data, (dynamic value) => ThemeDataTween(begin: value));
+        _data, widget.data, (dynamic value) => ThemeDataTween(begin: value)) as ThemeDataTween?;
     assert(_data != null);
   }
 
@@ -69,16 +69,14 @@ class _AnimatedThemeState extends AnimatedWidgetBaseState<ScaleAnimatedTheme> {
                 scale: animation,
                 child: Theme(
                   key: foregroundKey,
-                  isMaterialAppTheme: widget.isMaterialAppTheme,
                   child: widget.child,
                   data: widget.data,
                 ),
               )
             : Theme(
                 key: foregroundKey,
-                isMaterialAppTheme: widget.isMaterialAppTheme,
                 child: widget.child,
-                data: _data.evaluate(animation),
+                data: _data!.evaluate(animation),
               ),
       ],
     );
