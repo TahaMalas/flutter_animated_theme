@@ -1,5 +1,5 @@
 import 'dart:ui';
-
+import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
@@ -35,7 +35,10 @@ class CircularAnimatedTheme extends StatefulWidget {
     this.duration = kThemeAnimationDuration,
     VoidCallback? onEnd,
     required this.child,
+    this.delayAnimation = const Duration(milliseconds: 0),
   }) : super(key: key);
+
+  final Duration delayAnimation;
 
   /// Specifies the color and typography values for descendant widgets.
   final ThemeData data;
@@ -77,6 +80,7 @@ class CircularAnimatedThemeState extends State<CircularAnimatedTheme>
 
   @override
   void initState() {
+
     super.initState();
     _data = ThemeDataTween(begin: widget.data, end: widget.end);
     animationController = AnimationController(
@@ -142,7 +146,7 @@ class CircularAnimatedThemeState extends State<CircularAnimatedTheme>
     );
   }
 
-  _takeScreenShot() {
+  _takeScreenShot() async{
     _captureKey.currentState!.captureImage((image) {
       precacheImage(MemoryImage(image.data), context).then((cachedImage) {
         setState(() {
@@ -155,7 +159,7 @@ class CircularAnimatedThemeState extends State<CircularAnimatedTheme>
           changeData();
         });
       });
-    });
+    }, widget.delayAnimation );
   }
 
   void _onChangeTheme() async {

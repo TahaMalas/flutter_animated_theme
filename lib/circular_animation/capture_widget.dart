@@ -19,8 +19,9 @@ class CaptureWidget extends StatefulWidget {
 class CaptureWidgetState extends State<CaptureWidget> {
   final _boundaryKey = GlobalKey();
 
-  void captureImage(Function(CaptureResult) onCapture) async {
+  void captureImage(Function(CaptureResult) onCapture, Duration duration) async {
     WidgetsBinding.instance!.addPostFrameCallback((_) async {
+      await new Future.delayed(duration);
       final boundary = _boundaryKey.currentContext!.findRenderObject()
           as RenderRepaintBoundary;
       final image = await boundary.toImage(pixelRatio: 2);
